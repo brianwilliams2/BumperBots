@@ -607,10 +607,7 @@ public class PickupController : MonoBehaviour, IPunObservable
     {
         if (collision.collider.tag == "RedPlayer")
         {
-            if (PhotonNetwork.player.GetTeam() == PunTeams.Team.blue)
-            {
-                audioSource.PlayOneShot(dazedSound, 1.0f);
-            }
+            audioSource.PlayOneShot(dazedSound, 1.0f);
             isDashing = false;
             foreach (PickupItem item in PickupItem.DisabledPickupItems)
             {
@@ -633,10 +630,7 @@ public class PickupController : MonoBehaviour, IPunObservable
         }
         if (collision.collider.tag == "BluePlayer")
         {
-            if (PhotonNetwork.player.GetTeam() == PunTeams.Team.red)
-            {
-                audioSource.PlayOneShot(dazedSound, 1.0f);
-            }
+            audioSource.PlayOneShot(dazedSound, 1.0f);
             isDashing = false;
             foreach (PickupItem item in PickupItem.DisabledPickupItems)
             {
