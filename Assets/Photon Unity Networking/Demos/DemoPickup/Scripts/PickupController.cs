@@ -34,7 +34,7 @@ public class PickupController : MonoBehaviour, IPunObservable
     public float landAnimationSpeed = 1.0f;
 
     private Animation _animation;
-
+    private AudioSource audioSource;
 
 
     public PickupCharacterState _characterState;
@@ -59,6 +59,12 @@ public class PickupController : MonoBehaviour, IPunObservable
     public float trotAfterSeconds = 3.0f;
     private Rigidbody rb;
     public bool canJump = false;
+
+    // Audio clips
+    public AudioClip dashSound;
+    public AudioClip respawnSound;
+    public AudioClip dazedSound;
+    public AudioClip collectSound;
 
     private float jumpRepeatTime = 0.05f;
     private float jumpTimeout = 0.15f;
@@ -111,6 +117,7 @@ public class PickupController : MonoBehaviour, IPunObservable
     void Awake()
     {
         DontDestroyOnLoad(this.gameObject);
+        audioSource = GetComponent<AudioSource>();
         cameraTransform = GameObject.FindWithTag("MainCamera").transform;
         initialPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
         PhotonNetwork.automaticallySyncScene = true;
@@ -140,7 +147,6 @@ public class PickupController : MonoBehaviour, IPunObservable
                 }
             }
         }
-
 
         this.moveDirection = transform.TransformDirection(Vector3.forward);
 
@@ -219,6 +225,8 @@ public class PickupController : MonoBehaviour, IPunObservable
                 rb.mass = 100;
                 // If you miss the enemy, you are "confused" for 2 seconds, meaning you cannot move. This also prevents adjusting trajectory during dash.
                 StartCoroutine("DashCoroutine", 2);
+
+                audioSource.PlayOneShot(dashSound, 0.1f);
             }
 
             // If you are not dashing and the spacebar is not held down, your mass returns to 1 and your movement is re-enabled
@@ -241,7 +249,7 @@ public class PickupController : MonoBehaviour, IPunObservable
                 // If you let go of space and are still holding forward, you get launched in the direction the camera is facing, and your dash goes on cooldown
                 else
                 {
-                    rb.AddForce(movement * 800);
+                    rb.AddForce(movement * 2000);
                     isDashing = true;
                     canDash = false;
                     StartCoroutine("DashCooldownCoroutine", dashCooldown);
@@ -599,6 +607,10 @@ public class PickupController : MonoBehaviour, IPunObservable
     {
         if (collision.collider.tag == "RedPlayer")
         {
+            if (PhotonNetwork.player.GetTeam() == PunTeams.Team.blue)
+            {
+                audioSource.PlayOneShot(dazedSound, 1.0f);
+            }
             isDashing = false;
             foreach (PickupItem item in PickupItem.DisabledPickupItems)
             {
@@ -621,6 +633,10 @@ public class PickupController : MonoBehaviour, IPunObservable
         }
         if (collision.collider.tag == "BluePlayer")
         {
+            if (PhotonNetwork.player.GetTeam() == PunTeams.Team.red)
+            {
+                audioSource.PlayOneShot(dazedSound, 1.0f);
+            }
             isDashing = false;
             foreach (PickupItem item in PickupItem.DisabledPickupItems)
             {
@@ -648,6 +664,10 @@ public class PickupController : MonoBehaviour, IPunObservable
         {
             if (PhotonNetwork.player.GetTeam() == PunTeams.Team.blue)
             {
+                if (PickupItem.DisabledPickupItems.Count > 0)
+                {
+                    audioSource.PlayOneShot(collectSound, 1.0f);
+                }
                 foreach (PickupItem item in PickupItem.DisabledPickupItems)
                 {
                     if (item.PickupIsMine && item.SecondsBeforeRespawn <= 0)
@@ -662,6 +682,10 @@ public class PickupController : MonoBehaviour, IPunObservable
         {
             if (PhotonNetwork.player.GetTeam() == PunTeams.Team.red)
             {
+                if (PickupItem.DisabledPickupItems.Count > 0)
+                {
+                    audioSource.PlayOneShot(collectSound, 1.0f);
+                }
                 foreach (PickupItem item in PickupItem.DisabledPickupItems)
                 {
                     if (item.PickupIsMine && item.SecondsBeforeRespawn <= 0)
@@ -675,7 +699,7 @@ public class PickupController : MonoBehaviour, IPunObservable
         if (other.CompareTag("Death Area"))
         {
 
-
+            audioSource.PlayOneShot(respawnSound, 1.0f);
             rb.velocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             transform.position = initialPosition;

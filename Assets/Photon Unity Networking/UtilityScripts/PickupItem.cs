@@ -10,6 +10,9 @@ using Hashtable = ExitGames.Client.Photon.Hashtable;
 [RequireComponent(typeof(PhotonView))]
 public class PickupItem : Photon.MonoBehaviour, IPunObservable
 {
+    public AudioClip pickupSound;
+    private AudioSource audioSource;
+
     ///<summary>Enables you to define a timeout when the picked up item should re-spawn at the same place it was before.</summary>
     /// <remarks>
     /// Set in Inspector per GameObject! The value in code is just the default.
@@ -54,6 +57,10 @@ public class PickupItem : Photon.MonoBehaviour, IPunObservable
 
     public static HashSet<PickupItem> DisabledPickupItems = new HashSet<PickupItem>();
 
+    void Start()
+    {
+        audioSource = GetComponent<AudioSource>();
+    }
 
     public void OnTriggerEnter(Collider other)
     {
@@ -94,7 +101,7 @@ public class PickupItem : Photon.MonoBehaviour, IPunObservable
             // skip sending more pickups until the original pickup-RPC got back to this client
             return;
         }
-
+        audioSource.PlayOneShot(pickupSound, 1.0f);
         this.SentPickup = true;
         this.photonView.RPC("PunPickup", PhotonTargets.AllViaServer);
     }
